@@ -467,11 +467,11 @@ export class SupabaseService {
         return { success: false, error: 'User not authenticated' };
       }
 
-      // Get user profile data with fallback for missing setup_completed columns
+      // Get user profile data with correct column name (id instead of user_id)
       let profile: any = null;
       let profileError: any = null;
 
-      // First try with setup_completed columns
+      // Query using 'id' column (not 'user_id')
       try {
         const result = await this.client
           .from('user_profiles')
@@ -484,32 +484,14 @@ export class SupabaseService {
               name
             )
           `)
-          .eq('user_id', this.currentUser.id)
+          .eq('id', this.currentUser.id)
           .single();
         
         profile = result.data;
         profileError = result.error;
       } catch (error: any) {
-        if (error.message?.includes('setup_completed') && error.message?.includes('does not exist')) {
-          // Fallback query without setup_completed columns
-          log.warn('setup_completed columns do not exist, using fallback query');
-          const result = await this.client
-            .from('user_profiles')
-            .select(`
-              role,
-              organization_id,
-              organizations (
-                name
-              )
-            `)
-            .eq('user_id', this.currentUser.id)
-            .single();
-          
-          profile = result.data;
-          profileError = result.error;
-        } else {
-          throw error;
-        }
+        log.error('Profile query error:', error);
+        profileError = error;
       }
 
       if (profileError && profileError.code !== 'PGRST116') {
@@ -679,38 +661,17 @@ export class SupabaseService {
         return { success: false, error: 'User not authenticated' };
       }
 
-      // Check if user_profiles table exists and has required columns
-      try {
-        const { error: testError } = await this.client
-          .from('user_profiles')
-          .select('id')
-          .limit(1);
-
-        if (testError && (testError.message?.includes('user_id') || testError.code === 'PGRST204')) {
-          log.warn('user_profiles table schema issue detected. Using fallback storage.');
-          // Store in localStorage as fallback
-          // Note: localStorage not available in main process, will be handled by renderer fallback
-          return { success: true };
-        }
-      } catch (schemaError) {
-        log.warn('Database schema check failed, using fallback storage');
-        if (typeof window !== 'undefined') {
-          localStorage.setItem(`setup_completed_${this.currentUser.id}`, completed.toString());
-        }
-        return { success: true };
-      }
-
       const updateData = {
         setup_completed: completed,
         setup_completed_at: completed ? new Date().toISOString() : null,
         updated_at: new Date().toISOString()
       };
 
-      // First try to update existing profile
+      // First try to update existing profile using 'id' column
       const { data: existingProfile, error: selectError } = await this.client
         .from('user_profiles')
         .select('id')
-        .eq('user_id', this.currentUser.id)
+        .eq('id', this.currentUser.id)
         .single();
 
       if (selectError && selectError.code !== 'PGRST116') {
@@ -723,7 +684,7 @@ export class SupabaseService {
         const { error: updateError } = await this.client
           .from('user_profiles')
           .update(updateData)
-          .eq('user_id', this.currentUser.id);
+          .eq('id', this.currentUser.id);
 
         if (updateError) {
           log.error('Profile update failed:', updateError);
@@ -734,7 +695,7 @@ export class SupabaseService {
         const { error: insertError } = await this.client
           .from('user_profiles')
           .insert({
-            user_id: this.currentUser.id,
+            id: this.currentUser.id,
             role: 'teacher',
             ...updateData,
             created_at: new Date().toISOString()
@@ -750,8 +711,7 @@ export class SupabaseService {
       return { success: true };
     } catch (error: any) {
       log.error('Update setup completion exception:', error);
-      // Use fallback storage (handled by renderer process)
-      return { success: true };
+      return { success: false, error: error.message };
     }
   }
 
@@ -763,32 +723,21 @@ export class SupabaseService {
         return { success: false, error: 'User not authenticated' };
       }
 
-      // Try database first
+      // Query using 'id' column (not 'user_id')
       try {
         const { data: profile, error: profileError } = await this.client
           .from('user_profiles')
           .select('setup_completed')
-          .eq('user_id', this.currentUser.id)
+          .eq('id', this.currentUser.id)
           .single();
 
         if (profileError) {
           if (profileError.code === 'PGRST116') {
-            // No profile found, check fallback storage
-            // Note: localStorage not available in main process, will be handled by renderer fallback
-            return { success: true, completed: false };
-          } else if (profileError.code === 'PGRST204' || profileError.message?.includes('user_id')) {
-            // Schema issue, use fallback storage
-            log.warn('Database schema issue detected, using fallback storage');
-            // Note: localStorage not available in main process, will be handled by renderer fallback
+            // No profile found, setup not completed
             return { success: true, completed: false };
           }
           log.error('Get setup completion error:', profileError);
-          // Fallback on any database error
-          if (typeof window !== 'undefined') {
-            const fallbackValue = localStorage.getItem(`setup_completed_${this.currentUser.id}`);
-            return { success: true, completed: fallbackValue === 'true' };
-          }
-          return { success: true, completed: false };
+          return { success: false, error: profileError.message };
         }
 
         return { 
@@ -796,17 +745,12 @@ export class SupabaseService {
           completed: profile?.setup_completed || false 
         };
       } catch (dbError) {
-        log.warn('Database query failed, using fallback storage:', dbError);
-        if (typeof window !== 'undefined') {
-          const fallbackValue = localStorage.getItem(`setup_completed_${this.currentUser.id}`);
-          return { success: true, completed: fallbackValue === 'true' };
-        }
-        return { success: true, completed: false };
+        log.error('Database query failed:', dbError);
+        return { success: false, error: 'Database query failed' };
       }
     } catch (error: any) {
       log.error('Get setup completion exception:', error);
-      // Final fallback (handled by renderer process)
-      return { success: true, completed: false };
+      return { success: false, error: error.message };
     }
   }
 } 

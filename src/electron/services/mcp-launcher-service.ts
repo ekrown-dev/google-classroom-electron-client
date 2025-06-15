@@ -374,11 +374,13 @@ export class MCPLauncherService {
 
   private async updateClaudeDesktopConfigForBridge(): Promise<void> {
     try {
-      const configPath = await this.claudeDetectionService.getClaudeConfigPath();
+      let configPath = await this.claudeDetectionService.getClaudeConfigPath();
       
       if (!configPath) {
         // Create config directory and file
         const platform = process.platform;
+        const username = process.env.USERNAME || process.env.USER || 'user';
+        
         const configPaths = {
           win32: path.join(os.homedir(), 'AppData', 'Roaming', 'Claude'),
           darwin: path.join(os.homedir(), 'Library', 'Application Support', 'Claude'),
@@ -386,16 +388,21 @@ export class MCPLauncherService {
         };
 
         const configDir = configPaths[platform as keyof typeof configPaths] || configPaths.linux;
+        
+        this.addLog('info', `Creating Claude config directory: ${configDir}`, 'launcher');
         await fs.mkdir(configDir, { recursive: true });
         
-        const newConfigPath = path.join(configDir, 'claude_desktop_config.json');
-        await this.writeBridgeConfig(newConfigPath);
+        configPath = path.join(configDir, 'claude_desktop_config.json');
+        this.addLog('info', `Will create new Claude config file: ${configPath}`, 'launcher');
+        
+        await this.writeBridgeConfig(configPath);
       } else {
         // Update existing config
+        this.addLog('info', `Updating existing Claude config: ${configPath}`, 'launcher');
         await this.updateExistingConfigForBridge(configPath);
       }
 
-      this.addLog('info', 'Claude Desktop configured for bridge connection', 'launcher');
+      this.addLog('info', `Claude Desktop configured for bridge connection at: ${configPath}`, 'launcher');
     } catch (error: any) {
       this.addLog('error', `Failed to configure Claude for bridge: ${error.message}`, 'launcher');
       throw error;

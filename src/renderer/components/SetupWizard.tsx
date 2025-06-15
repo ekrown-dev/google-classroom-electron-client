@@ -136,7 +136,8 @@ const SetupWizard: React.FC<SetupWizardProps> = ({ user, onComplete, onGoogleCon
     setError(null);
     setSuccess(null);
 
-    const proPlanPriceId = 'price_1RZ7XYDFOqrH8dpSyfxS0nWJ';
+    // Use FREE TRIAL price ID instead of Pro Plan price ID
+    const freeTrialPriceId = 'price_1RZ7YYDFOqrH8dpSjXL6A25g'; // $0.00 Free Trial
 
     if (!user || !user.id) {
       console.error('User ID is not available. Cannot proceed with payment setup.');
@@ -146,15 +147,15 @@ const SetupWizard: React.FC<SetupWizardProps> = ({ user, onComplete, onGoogleCon
     }
 
     try {
-      console.log(`Attempting to create Stripe checkout session for Price ID: ${proPlanPriceId}, User ID: ${user.id}`);
-      const result = await window.electronAPI.stripe.createCheckoutSession(proPlanPriceId, user.id);
+      console.log(`Attempting to create Stripe checkout session for Free Trial Price ID: ${freeTrialPriceId}, User ID: ${user.id}`);
+      const result = await window.electronAPI.stripe.createCheckoutSession(freeTrialPriceId, user.id);
       if (result && result.success && result.url) {
-        console.log('Stripe checkout session created, opening URL:', result.url);
-        setSuccess('Redirecting to secure payment setup...');
+        console.log('Stripe checkout session created for free trial, opening URL:', result.url);
+        setSuccess('Redirecting to secure payment setup for 14-day free trial...');
         await window.electronAPI.system.openExternal(result.url);
         
         // Start more robust payment polling
-        setSuccess('Payment window opened. Complete payment in the browser and return here...');
+        setSuccess('Payment window opened for free trial setup. Complete setup in the browser and return here...');
         startPaymentPolling();
       } else {
         console.error('Failed to create Stripe checkout session:', result?.error);

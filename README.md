@@ -17,16 +17,16 @@ Claude Desktop → Electron Bridge (localhost:5123) → MCP Server (mcp.ekrown.c
 ```
 
 The Electron client acts as a secure bridge between Claude Desktop and the Google Classroom MCP server, ensuring:
-- ✅ **License Verification**: Only authenticated users (trial or paid) can access the MCP server
-- ✅ **Trial Period Management**: 14-day free trial with 1 CRUD operation per day limit
-- ✅ **Token Authentication**: All communications are authenticated with HMAC-SHA256 tokens
-- ✅ **Local Security**: Claude Desktop can only connect through localhost bridge
-- ✅ **Session Management**: Automatic session timeouts and cleanup
-- ✅ **Real-time Subscription Sync**: Automatic license updates after Stripe payments
+- **License Verification**: Only authenticated users (trial or paid) can access the MCP server
+- **Trial Period Management**: 14-day free trial with 1 CRUD operation per day limit
+- **Token Authentication**: All communications are authenticated with HMAC-SHA256 tokens
+- **Local Security**: Claude Desktop can only connect through localhost bridge
+- **Session Management**: Automatic session timeouts and cleanup
+- **Real-time Subscription Sync**: Automatic license updates after Stripe payments
 
-## 🚀 Features
+## Features
 
-### 🔐 Authentication & Licensing
+### Authentication & Licensing
 - **Supabase Authentication**: Secure user registration, login, and session management
 - **14-Day Free Trial**: Full access with usage limitations (1 CRUD operation per day)
 - **5-Step Setup Wizard**: Guided trial activation with integrated payment setup
@@ -35,33 +35,33 @@ The Electron client acts as a secure bridge between Claude Desktop and the Googl
 - **Real-time License Sync**: Automatic subscription status updates after payment
 - **Visual Trial Status**: Green indicator when setup complete and trial active
 
-### 🛡️ Security & Bridge Architecture
+### Security & Bridge Architecture
 - **WebSocket Bridge**: Secure localhost:5123 bridge with token authentication
 - **HMAC-SHA256 Tokens**: Cryptographic authentication for all MCP communications
 - **License Verification**: Real-time verification of trial/subscription status
 - **Session Management**: 30-minute sessions with automatic cleanup
 - **Rate Limiting**: 100 requests/minute for bridge sessions
 
-### 🎓 Google Classroom Integration
+### Google Classroom Integration
 - **Full OAuth2 Support**: Individual user authentication with Google
 - **Service Account Support**: Institutional deployment with domain-wide delegation
 - **Complete CRUD Operations**: Create, read, update, delete classroom resources
 - **Trial Limitations**: 1 creation/modification per day during trial period
 - **Unlimited Read Access**: Browse courses, students, assignments without limits
 
-### 🤖 Claude AI Integration
+### Claude AI Integration
 - **Automatic Detection**: Finds and configures Claude Desktop installation
 - **MCP Configuration**: Automatically updates Claude config for secure bridge access
 - **Bridge-Only Access**: Prevents direct MCP server connections for security
 - **Cross-Platform Support**: Windows, macOS, and Linux compatibility
 
-### 💼 Enterprise Features
+### Enterprise Features
 - **Multi-tenant Architecture**: Support for multiple organizations
 - **Webhook Integration**: Stripe webhook handling for license updates
 - **Health Monitoring**: Built-in status monitoring and logging
 - **Error Handling**: Comprehensive error tracking and user feedback
 
-## 📋 Prerequisites
+## Prerequisites
 
 ### Required Software
 - **Node.js** 18+ and npm
@@ -225,7 +225,7 @@ Choose one of the following authentication methods:
 "Grade this student's essay with feedback" [Trial: 1/day]
 ```
 
-## ⚙️ Configuration
+## Configuration
 
 ### Environment Variables
 
@@ -269,7 +269,7 @@ The app automatically manages Claude Desktop configuration at:
 - **macOS**: `~/.config/claude-desktop/claude_desktop_config.json`
 - **Linux**: `~/.config/claude-desktop/claude_desktop_config.json`
 
-## 🔒 Security Features
+## Security Features
 
 ### Bridge Service Architecture
 
@@ -294,7 +294,7 @@ The application implements a secure WebSocket bridge that:
 - **Request Validation**: All bridge requests validated with security headers
 - **Origin Filtering**: Only authorized origins accepted
 
-## 🛠️ Development
+## Development
 
 ### Project Structure
 ```

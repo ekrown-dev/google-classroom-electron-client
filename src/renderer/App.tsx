@@ -231,6 +231,7 @@ const App: React.FC = () => {
         // Only reset these states on logout or explicit user actions
         
         // Check persistent setup completion status with fallback storage
+        let setupComplete = false;
         try {
           const setupResult = await SetupStorage.getSetupCompletionWithFallback(
             userResponse.user.id,
@@ -238,22 +239,48 @@ const App: React.FC = () => {
           );
           console.log('Setup completion result (with fallback):', setupResult);
           if (setupResult.success) {
-            const isComplete = setupResult.completed === true;
+            setupComplete = setupResult.completed === true;
             setState(prev => ({ 
               ...prev, 
-              isSetupComplete: isComplete
+              isSetupComplete: setupComplete
             }));
-            console.log('Setup completion status loaded:', isComplete);
-            console.log('User will be routed to:', isComplete ? 'Dashboard' : 'Setup Wizard');
+            console.log('Setup completion status loaded:', setupComplete);
+            console.log('User will be routed to:', setupComplete ? 'Dashboard' : 'Setup Wizard');
           } else {
             console.warn('Could not load setup completion status:', setupResult.error);
-            // Default to false for safety
-            setState(prev => ({ ...prev, isSetupComplete: false }));
+            // For existing users with license data, assume setup is complete
+            if (licenseData && (licenseData.status === 'active' || licenseData.status === 'trial')) {
+              console.log('User has active license, assuming setup is complete');
+              setupComplete = true;
+              setState(prev => ({ ...prev, isSetupComplete: true }));
+              
+              // Save the completion status to prevent future issues
+              try {
+                await SetupStorage.setSetupCompletionWithFallback(
+                  userResponse.user.id,
+                  true,
+                  (completed) => window.electronAPI.supabase.updateSetupCompletion(completed)
+                );
+                console.log('Setup completion status saved for existing user with license');
+              } catch (saveError) {
+                console.warn('Could not save setup completion status:', saveError);
+              }
+            } else {
+              // Default to false for safety
+              setState(prev => ({ ...prev, isSetupComplete: false }));
+            }
           }
         } catch (error) {
           console.error('Error loading setup completion status:', error);
-          // Default to false for safety
-          setState(prev => ({ ...prev, isSetupComplete: false }));
+          // For existing users with license data, assume setup is complete
+          if (licenseData && (licenseData.status === 'active' || licenseData.status === 'trial')) {
+            console.log('User has active license, assuming setup is complete due to error');
+            setupComplete = true;
+            setState(prev => ({ ...prev, isSetupComplete: true }));
+          } else {
+            // Default to false for safety
+            setState(prev => ({ ...prev, isSetupComplete: false }));
+          }
         }
 
       } else {

@@ -202,7 +202,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, license }) => {
                     size="small"
                     onClick={async () => {
                       try {
-                        const result = await window.electronAPI.stripe.createCheckoutSession('price_1RZ7XYDFOqrH8dpSyfxS0nWJ', user.id);
+                        const result = await window.electronAPI.stripe.createCheckoutSession('price_1RZ7YYDFOqrH8dpSjXL6A25g', user.id);
                         if (result && result.success && result.url) {
                           window.electronAPI.system.openExternal(result.url);
                         } else {

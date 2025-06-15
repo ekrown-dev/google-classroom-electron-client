@@ -72,6 +72,13 @@ export class StripeService {
           userId: userId,
           plan: planName
         },
+        subscription_data: {
+          metadata: {
+            userId: userId,
+            source: 'google-classroom-mcp-desktop',
+            plan: planName
+          }
+        },
         client_reference_id: userId
       };
 
@@ -309,10 +316,6 @@ export class StripeService {
     
     log.info('Handling subscription event:', event.type, subscription.id);
     
-    // Here you would typically update your database
-    // For this implementation, we'll just log the event
-    // In a real app, you'd update the user's license status in Supabase
-    
     const status = subscription.status;
     const customerId = subscription.customer as string;
     
@@ -323,6 +326,19 @@ export class StripeService {
       currentPeriodEnd: new Date(subscription.current_period_end * 1000),
       cancelAtPeriodEnd: subscription.cancel_at_period_end
     });
+
+    // Update license status in Supabase
+    if (subscription.metadata?.userId) {
+      this.pendingWebhookUpdate = {
+        userId: subscription.metadata.userId,
+        subscriptionId: subscription.id,
+        customerId,
+        status: status === 'active' || status === 'trialing' ? 'active' : status
+      };
+      log.info('Stored pending webhook update for user:', subscription.metadata.userId);
+    } else {
+      log.warn('No userId found in subscription metadata, cannot update license status');
+    }
   }
 
   private async handleInvoiceEvent(event: Stripe.Event): Promise<void> {

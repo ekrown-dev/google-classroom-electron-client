@@ -135,7 +135,7 @@ const Navigation: React.FC<NavigationProps> = ({ user, license, onLogout, isGoog
             color="primary"
             sx={{ mt: 1 }}
             onClick={async () => {
-              const proPlanPriceId = 'price_1RZ7XYDFOqrH8dpSyfxS0nWJ';
+              const freeTrialPriceId = 'price_1RZ7YYDFOqrH8dpSjXL6A25g'; // $0.00 Free Trial
 
               if (!user || !user.id) {
                 console.error('User ID is not available. Cannot proceed with upgrade.');
@@ -144,8 +144,8 @@ const Navigation: React.FC<NavigationProps> = ({ user, license, onLogout, isGoog
               }
 
               try {
-                console.log(`Attempting to create Stripe checkout session for Price ID: ${proPlanPriceId}, User ID: ${user.id}`);
-                const result = await window.electronAPI.stripe.createCheckoutSession(proPlanPriceId, user.id);
+                console.log(`Attempting to create Stripe checkout session for Price ID: ${freeTrialPriceId}, User ID: ${user.id}`);
+                const result = await window.electronAPI.stripe.createCheckoutSession(freeTrialPriceId, user.id);
                 if (result && result.success && result.url) {
                   console.log('Stripe checkout session created, opening URL:', result.url);
                   window.electronAPI.system.openExternal(result.url);

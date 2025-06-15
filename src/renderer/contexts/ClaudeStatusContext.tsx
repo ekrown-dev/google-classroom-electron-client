@@ -33,7 +33,7 @@ interface ClaudeStatusContextType {
 const ClaudeStatusContext = createContext<ClaudeStatusContextType | undefined>(undefined);
 
 export const ClaudeStatusProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [claudeDetectionStatus, setClaudeDetectionStatus] = useState<ClaudeDetectionStatus>('not_found');
+  const [claudeDetectionStatus, setClaudeDetectionStatus] = useState<ClaudeDetectionStatus>('unknown');
   const [claudeInstallPath, setClaudeInstallPath] = useState<string | undefined>(undefined);
   const [claudeVersion, setClaudeVersion] = useState<string | undefined>(undefined);
   const [claudeDetectionError, setClaudeDetectionError] = useState<string | undefined>(undefined);
@@ -56,8 +56,24 @@ export const ClaudeStatusProvider: React.FC<{ children: ReactNode }> = ({ childr
       }
     } catch (error: any) {
       console.error('Error detecting Claude Desktop:', error);
-      setClaudeDetectionStatus('not_found'); // Or 'unknown' if preferred on error
+      setClaudeDetectionStatus('not_found');
       setClaudeDetectionError(error.message || 'Failed to check Claude Desktop status.');
+    }
+  }, []);
+
+  const checkMcpStatus = useCallback(async () => {
+    try {
+      const result = await window.electronAPI.mcp.getStatus();
+      if (result.isRunning) {
+        setMcpLaunchStatus('active');
+        setMcpLaunchError(undefined);
+      } else {
+        setMcpLaunchStatus('inactive');
+      }
+    } catch (error: any) {
+      console.error('Error checking MCP status:', error);
+      setMcpLaunchStatus('failed');
+      setMcpLaunchError(error.message || 'Failed to check MCP status');
     }
   }, []);
 
@@ -80,8 +96,10 @@ export const ClaudeStatusProvider: React.FC<{ children: ReactNode }> = ({ childr
       const result: McpLaunchResponse = await window.electronAPI.mcp.launch();
       if (result.success) {
         setMcpLaunchStatus('active');
-        // If claude:detect didn't run right before, or to refresh details
-        // you might want to call checkClaudeDetection again or a more specific getClaudeStatus IPC
+        // Re-check Claude detection to update status
+        await checkClaudeDetection();
+        // Start periodic status checking
+        setTimeout(checkMcpStatus, 2000);
       } else {
         setMcpLaunchStatus('failed');
         setMcpLaunchError(result.error || 'Failed to launch MCP and Claude.');
@@ -91,7 +109,7 @@ export const ClaudeStatusProvider: React.FC<{ children: ReactNode }> = ({ childr
       setMcpLaunchStatus('failed');
       setMcpLaunchError(error.message || 'An unexpected error occurred during launch.');
     }
-  }, [claudeDetectionStatus, checkClaudeDetection]);
+  }, [claudeDetectionStatus, checkClaudeDetection, checkMcpStatus]);
 
   const stopMcpAndClaude = useCallback(async () => {
     try {
@@ -102,6 +120,8 @@ export const ClaudeStatusProvider: React.FC<{ children: ReactNode }> = ({ childr
       
       if (result.success) {
         setMcpLaunchStatus('inactive');
+        // Re-check status after stopping
+        setTimeout(checkMcpStatus, 1000);
       } else {
         setMcpLaunchStatus('failed');
         setMcpLaunchError(result.error || 'Failed to stop MCP and Claude');
@@ -111,7 +131,30 @@ export const ClaudeStatusProvider: React.FC<{ children: ReactNode }> = ({ childr
       setMcpLaunchStatus('failed');
       setMcpLaunchError(error.message || 'An unexpected error occurred during stop');
     }
-  }, []);
+  }, [checkMcpStatus]);
+
+  // Initial detection on mount
+  useEffect(() => {
+    checkClaudeDetection();
+    checkMcpStatus();
+  }, [checkClaudeDetection, checkMcpStatus]);
+
+  // Periodic status checking when active
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    
+    if (mcpLaunchStatus === 'active') {
+      interval = setInterval(() => {
+        checkMcpStatus();
+      }, 10000); // Check every 10 seconds when active
+    }
+    
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [mcpLaunchStatus, checkMcpStatus]);
 
   const value = {
     claudeDetectionStatus,

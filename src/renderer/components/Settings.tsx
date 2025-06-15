@@ -138,7 +138,7 @@ const Settings: React.FC<SettingsProps> = ({ user, license }) => {
     setError(null);
     setSuccess(null);
     try {
-      const result = await window.electronAPI.stripe.createCheckoutSession('price_1RZ7XYDFOqrH8dpSyfxS0nWJ', user.id);
+      const result = await window.electronAPI.stripe.createCheckoutSession('price_1RZ7YYDFOqrH8dpSjXL6A25g', user.id);
       if (result.success && result.url) {
         window.electronAPI.system.openExternal(result.url);
         setSuccess('Redirecting to Stripe for upgrade...');

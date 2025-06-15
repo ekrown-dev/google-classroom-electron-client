@@ -330,14 +330,6 @@ class GoogleClassroomMCPApp {
       }
     });
 
-    // Add handler to refresh license status
-    ipcMain.handle('license:refresh', async () => {
-      if (!this.supabaseService) {
-        return { success: false, error: 'Supabase service not initialized' };
-      }
-      return await this.supabaseService.getLicenseStatus();
-    });
-
     // Add handler to check subscription status after payment
     ipcMain.handle('subscription:checkAfterPayment', async () => {
       if (!this.supabaseService || !this.stripeService) {
@@ -351,7 +343,27 @@ class GoogleClassroomMCPApp {
           return { success: false, error: 'User not authenticated' };
         }
 
-        // Try to get customer by email and check subscription
+        // First check for pending webhook updates
+        const webhookUpdate = this.stripeService.getPendingWebhookUpdate();
+        if (webhookUpdate && webhookUpdate.userId === userResult.user.id) {
+          log.info('Processing pending webhook update:', webhookUpdate);
+          
+          const updateResult = await this.supabaseService.updateLicenseFromStripe(
+            webhookUpdate.subscriptionId,
+            webhookUpdate.status,
+            webhookUpdate.userId,
+            webhookUpdate.customerId
+          );
+          
+          if (updateResult.success) {
+            log.info('Successfully updated license from webhook data');
+            return { success: true, subscriptionActive: true };
+          } else {
+            log.error('Failed to update license from webhook:', updateResult.error);
+          }
+        }
+
+        // Try to get customer by email and check subscription status
         const customerResult = await this.stripeService.getCustomerByEmail(userResult.user.email!);
         if (customerResult.success && customerResult.customerId) {
           const subscriptionStatus = await this.stripeService.getSubscriptionStatus(customerResult.customerId);
@@ -364,10 +376,18 @@ class GoogleClassroomMCPApp {
           });
           
           if (subscriptionStatus.isActive && subscriptionStatus.subscriptionId) {
+            // Determine proper license status based on subscription status
+            let licenseStatus = 'active';
+            if (subscriptionStatus.status === 'trialing') {
+              licenseStatus = 'trial';
+            } else if (subscriptionStatus.status === 'active') {
+              licenseStatus = 'active';
+            }
+            
             // Update license in Supabase with both subscription and customer ID
             const updateResult = await this.supabaseService.updateLicenseFromStripe(
               subscriptionStatus.subscriptionId,
-              subscriptionStatus.status === 'trialing' ? 'trial' : 'active',
+              licenseStatus,
               userResult.user.id,
               customerResult.customerId
             );
@@ -376,7 +396,7 @@ class GoogleClassroomMCPApp {
             
             if (updateResult.success) {
               log.info('Successfully updated license after payment check');
-              return { success: true, subscriptionActive: true };
+              return { success: true, subscriptionActive: true, status: licenseStatus };
             } else {
               log.error('Failed to update license:', updateResult.error);
               return { success: false, error: updateResult.error };

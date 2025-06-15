@@ -1,24 +1,29 @@
 #!/bin/bash
 
-echo "🚀 Starting eKROWN Classroom AI Assistant for authentication..."
+echo "Starting eKROWN Classroom AI Assistant for authentication..."
 
-# Kill any existing instances
-pkill -f "google-classroom-electron-client" 2>/dev/null || true
+# Kill any existing npm processes first
+echo "Stopping any existing processes..."
+pkill -f "npm run start"
+sleep 2
 
-# Change to app directory
-cd "/home/ekrown/google-classroom-electron-client"
+# Navigate to the app directory
+cd "$(dirname "$0")"
 
-# Start the app in the background
-npm run electron:dev &
-APP_PID=$!
+# Install dependencies if node_modules doesn't exist
+if [ ! -d "node_modules" ]; then
+    echo "Installing dependencies..."
+    npm install
+fi
 
-echo "📱 App starting with PID: $APP_PID"
-echo "⏳ Waiting for app to be ready (15 seconds)..."
+# Start the app in background
+echo "Starting Electron app..."
+npm run start &
 
-# Wait for app to start
-sleep 15
+# Wait for the app to initialize
+sleep 5
 
-echo "✅ App should now be ready to receive authentication callbacks!"
+echo "App should now be ready to receive authentication callbacks!"
 echo ""
 echo "📋 Now you can:"
 echo "   1. Click the email confirmation link"
@@ -28,8 +33,7 @@ echo ""
 echo "🔗 Example protocol URL format:"
 echo "   ekrown-classroom://auth/callback#access_token=...&refresh_token=..."
 echo ""
-echo "📱 App PID: $APP_PID (use 'kill $APP_PID' to stop)"
 
-# Wait for user input to keep script running
-echo "Press Ctrl+C to stop the app"
-wait $APP_PID
+# Keep the script running so the app stays active
+echo "Press Ctrl+C to stop the app..."
+wait
