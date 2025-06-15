@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run build:*)",
+      "Bash(npm run electron:dev:*)",
+      "Bash(timeout 20s npm run electron:dev)",
+      "Bash(chmod:*)",
+      "Bash(update-desktop-database:*)",
+      "Bash(xdg-settings:*)",
+      "Bash(cp:*)",
+      "Bash(xdg-open:*)",
+      "Bash(pkill:*)",
+      "Bash(npm run type-check:*)",
+      "Bash(npm --prefix /home/ekrown/google-classroom-mcp-server run build)",
+      "Bash(npm:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(rg:*)"
+    ],
+    "deny": []
+  }
+}

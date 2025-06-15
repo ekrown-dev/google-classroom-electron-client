@@ -1,0 +1,168 @@
+{
+  "name": "google-classroom-electron-client",
+  "version": "1.0.0",
+  "description": "Google Classroom AI Assistant - Professional Desktop App (MCP Client)",
+  "main": "dist/electron/main.js",
+  "type": "module",
+  "homepage": "https://mcp.ekrown.com",
+  "author": "Your Name",
+  "scripts": {
+    "build": "npm run build:main && npm run build:preload && npm run build:renderer",
+    "build:main": "tsc --project tsconfig.main.json",
+    "build:preload": "tsc --project tsconfig.preload.json && mv dist/electron/preload.js dist/electron/preload.cjs",
+    "build:renderer": "vite build",
+    "build:watch": "concurrently \"npm run build:main -- --watch\" \"npm run build:preload -- --watch\" \"npm run build:renderer -- --watch\"",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint src/**/*.{ts,tsx}",
+    "lint:fix": "eslint src/**/*.{ts,tsx} --fix",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist",
+    "prebuild": "npm run clean",
+    "electron:dev": "npm run build && GDK_BACKEND=x11 electron . --disable-web-security --no-sandbox",
+    "electron:wayland": "npm run build && electron . --disable-web-security --enable-features=UseOzonePlatform --ozone-platform=wayland",
+    "watch:dev": "concurrently --kill-others \"npm run build:main -- --watch\" \"npm run build:renderer -- --watch\"",
+    "electron:build": "npm run build && sh scripts/bundle-mcp-server.sh && electron-builder",
+    "electron:dist": "npm run build && sh scripts/bundle-mcp-server.sh && electron-builder --publish=never",
+    "electron:publish": "npm run build && sh scripts/bundle-mcp-server.sh && electron-builder --publish=always",
+    "app:start": "GDK_BACKEND=x11 electron . --no-sandbox",
+    "app:dev": "nodemon --exec electron . --watch dist/",
+    "dev:quick": "GDK_BACKEND=x11 electron . --no-sandbox"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.11.1",
+    "@emotion/styled": "^11.11.0",
+    "@mui/icons-material": "^5.15.3",
+    "@mui/lab": "^5.0.0-alpha.158",
+    "@mui/material": "^5.15.3",
+    "@supabase/supabase-js": "^2.39.3",
+    "@types/ws": "^8.18.1",
+    "axios": "^1.6.2",
+    "crypto-js": "^4.2.0",
+    "dotenv": "^16.4.5",
+    "electron-log": "^5.0.1",
+    "electron-updater": "^6.1.7",
+    "express": "^4.19.0",
+    "keytar": "^7.9.0",
+    "node-machine-id": "^1.1.12",
+    "ps-tree": "^1.2.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.20.1",
+    "stripe": "^14.14.0",
+    "ws": "^8.18.2"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.28.0",
+    "@types/crypto-js": "^4.2.1",
+    "@types/electron": "^1.4.38",
+    "@types/express": "^5.0.3",
+    "@types/jest": "^29.5.0",
+    "@types/node": "^22.0.0",
+    "@types/ps-tree": "^1.1.6",
+    "@types/react": "^18.3.23",
+    "@types/react-dom": "^18.3.7",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "@vitejs/plugin-react": "^4.2.1",
+    "concurrently": "^8.2.2",
+    "electron": "^28.1.0",
+    "electron-builder": "^24.9.1",
+    "eslint": "^8.57.1",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.1.0",
+    "eslint-plugin-react": "^7.37.5",
+    "globals": "^16.2.0",
+    "jest": "^29.7.0",
+    "jest-junit": "^16.0.0",
+    "lint-staged": "^15.2.0",
+    "nodemon": "^3.0.2",
+    "prettier": "^3.2.0",
+    "ts-jest": "^29.1.0",
+    "typescript": "^5.5.0",
+    "typescript-eslint": "^8.34.0",
+    "vite": "^5.0.10"
+  },
+  "keywords": [
+    "electron",
+    "google-classroom",
+    "education",
+    "claude",
+    "ai",
+    "desktop",
+    "mcp-client"
+  ],
+  "license": "MIT",
+  "build": {
+    "appId": "com.ekrown.classroom-ai-assistant",
+    "productName": "eKROWN Assistant",
+    "copyright": "Copyright © 2024 eKROWN|Technologies",
+    "directories": {
+      "output": "release",
+      "buildResources": "electron/build"
+    },
+    "files": [
+      "dist/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "electron/resources/",
+        "to": "resources/",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "mac": {
+      "category": "public.app-category.education",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "notarize": {
+        "teamId": "YOUR_TEAM_ID"
+      }
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "publisherName": "EKrown Technologies",
+      "verifyUpdateCodeSignature": true
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "category": "Education"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "publish": {
+      "provider": "generic",
+      "url": "https://updates.ekrown.com/"
+    }
+  }
+}

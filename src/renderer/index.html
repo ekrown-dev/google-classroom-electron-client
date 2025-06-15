@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:;">
+    <title>eKROWN Classroom AI Assistant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #f5f5f5;
+        }
+        
+        #root {
+            width: 100vw;
+            height: 100vh;
+            overflow: auto;
+        }
+        
+        /* Loading styles */
+        .loading-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #4285f4 0%, #34a853 100%);
+            color: white;
+        }
+        
+        
+        .loading-text {
+            font-size: 18px;
+            font-weight: 500;
+        }
+        
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+    </style>
+</head>
+<body>
+    <div id="root">
+        <div class="loading-container">
+            <div style="text-align: center; margin-bottom: 30px;">
+                <h1 style="font-size: 36px; margin-bottom: 8px;">eKROWN|Technologies</h1>
+                <h2 style="font-size: 24px; font-weight: 400; opacity: 0.9;">AI Assistant for Google Classroom</h2>
+            </div>
+            <div class="loading-text">Initializing Application...</div>
+        </div>
+    </div>
+
+    <script type="module" src="./index.tsx"></script>
+</body>
+</html> 

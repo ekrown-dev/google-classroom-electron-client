@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=eKROWN Classroom AI Assistant
+Comment=Google Classroom AI Assistant  
+Exec=/home/ekrown/google-classroom-electron-client/handle-protocol.sh %u
+Icon=/home/ekrown/google-classroom-electron-client/src/renderer/assets/eKRN-logo.png
+Terminal=false
+Categories=Education;
+MimeType=x-scheme-handler/ekrown-classroom;
+StartupNotify=true
+NoDisplay=false
